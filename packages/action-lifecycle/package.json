@@ -1,0 +1,14 @@
+{
+  "name": "action-lifecycle",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "~6.0.3"
+  }
+}

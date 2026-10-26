@@ -1,3 +1,5 @@
 /.agents
+/.claude
 CLAUDE.local.md
 node_modules
+skills-lock.json

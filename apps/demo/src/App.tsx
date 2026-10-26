@@ -1,7 +1,5 @@
-import { test } from "action-lifecycle";
-
 function App() {
-  return <h1>{test()}</h1>;
+	return <h1>action-lifecycle</h1>;
 }
 
 export default App;

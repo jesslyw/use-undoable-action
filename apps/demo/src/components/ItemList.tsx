@@ -31,17 +31,12 @@ function ItemList() {
 		const res = await fetch(`/api/items/${id}`, { method: "DELETE" });
 		if (!res.ok) throw new Error("failed to delete");
 		setDeleted(id, true);
-		const data = await res.json();
-		return data;
 	};
 
 	const restoreItem = async (id: string) => {
 		const res = await fetch(`/api/items/${id}/restore`, { method: "POST" });
 		if (!res.ok) throw new Error("failed to restore");
-
 		setDeleted(id, false);
-		const data = await res.json();
-		return data;
 	};
 
 	const { state, execute, undo, dismiss } = useUndoableAction({

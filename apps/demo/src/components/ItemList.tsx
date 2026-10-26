@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
+	Item as ItemRow,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemTitle,
 } from "./ui/item";
 import { useUndoableAction } from "action-lifecycle";
 import { toast } from "./ui/toast";
@@ -13,62 +13,82 @@ import { Spinner } from "./ui/spinner";
 
 export type Item = { id: string; name: string; deleted: boolean };
 
-function ItemList({ items }: { items: Item[] }) {
-  const [getItems, setItems] = useState<Item[]>(items);
+function ItemList() {
+	const [getItems, setItems] = useState<Item[]>([]);
 
-  const deleteItem = async (item: Item) => {
-    const updatedItems = getItems.filter((e) => e.id !== item.id);
-    setItems(updatedItems);
-    console.log(item, "deleted");
-    console.log("new list:", getItems);
-  };
+	useEffect(() => {
+		const load = async () => {
+			const res = await fetch("/api/items");
+			const data = await res.json();
+			setItems(data);
+		};
+		load();
+	}, []);
+	const setDeleted = (id: string, deleted: boolean) =>
+		setItems((xs) => xs.map((x) => (x.id === id ? { ...x, deleted } : x)));
 
-  const restoreItem = async (item: Item) => {
-    getItems.push(item);
-  };
+	const deleteItem = async (id: string) => {
+		const res = await fetch(`/api/items/${id}`, { method: "DELETE" });
+		if (!res.ok) throw new Error("failed to delete");
+		setDeleted(id, true);
+		const data = await res.json();
+		return data;
+	};
 
-  const { state, execute, undo, dismiss } = useUndoableAction({
-    execute: deleteItem,
-    undo: restoreItem,
-  });
+	const restoreItem = async (id: string) => {
+		const res = await fetch(`/api/items/${id}/restore`, { method: "POST" });
+		if (!res.ok) throw new Error("failed to restore");
 
-  useEffect(() => {
-    if (state.status !== "undoable") return;
+		setDeleted(id, false);
+		const data = await res.json();
+		return data;
+	};
 
-    const id = toast.add({
-      description: `${state.arg.name} deleted`,
-      actionProps: { children: "Undo", onClick: undo },
-      onClose: dismiss,
-      timeout: 0,
-    });
-    return () => toast.close(id);
-  }, [state, undo, dismiss]);
+	const { state, execute, undo, dismiss } = useUndoableAction({
+		execute: deleteItem,
+		undo: restoreItem,
+	});
 
-  return getItems.map((item) => {
-    const isDeleting = state.status === "executing" && state.arg === item;
+	useEffect(() => {
+		if (state.status !== "undoable") return;
+		const item = getItems.find((e) => e.id === state.arg);
 
-    return (
-      <Item key={item.id} variant="outline">
-        <ItemContent>
-          <ItemTitle>{item.name}</ItemTitle>
-          <ItemDescription>
-            A simple item with title and description.
-          </ItemDescription>
-        </ItemContent>
-        <ItemActions>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isDeleting}
-            onClick={() => execute(item)}
-          >
-            {isDeleting && <Spinner />}
-            Delete
-          </Button>
-        </ItemActions>
-      </Item>
-    );
-  });
+		const id = toast.add({
+			description: `${item?.name} deleted`,
+			actionProps: { children: "Undo", onClick: undo },
+			onClose: dismiss,
+			timeout: 0,
+		});
+		return () => toast.close(id);
+	}, [state, undo, dismiss, getItems]);
+
+	return getItems
+		.filter((item) => !item.deleted)
+		.map((item) => {
+			const isDeleting = state.status === "executing" && state.arg === item.id;
+
+			return (
+				<ItemRow key={item.id} variant="outline">
+					<ItemContent>
+						<ItemTitle>{item.name}</ItemTitle>
+						<ItemDescription>
+							A simple item with title and description.
+						</ItemDescription>
+					</ItemContent>
+					<ItemActions>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={isDeleting}
+							onClick={() => execute(item.id)}
+						>
+							{isDeleting && <Spinner />}
+							Delete
+						</Button>
+					</ItemActions>
+				</ItemRow>
+			);
+		});
 }
 
 export default ItemList;

@@ -1,15 +1,15 @@
+import { useUndoableAction } from "action-lifecycle";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import {
-	Item as ItemRow,
 	ItemActions,
 	ItemContent,
 	ItemDescription,
+	Item as ItemRow,
 	ItemTitle,
 } from "./ui/item";
-import { useUndoableAction } from "action-lifecycle";
-import { toast } from "./ui/toast";
 import { Spinner } from "./ui/spinner";
+import { toast } from "./ui/toast";
 
 export type Item = { id: string; name: string; deleted: boolean };
 

@@ -35,5 +35,11 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["apps/demo/src/components/ui/**"],
+			"linter": { "enabled": false }
+		}
+	]
 }

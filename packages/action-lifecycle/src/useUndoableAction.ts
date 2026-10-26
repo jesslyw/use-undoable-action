@@ -41,7 +41,7 @@ export function useUndoableAction<TArg>(
 
 	useEffect(() => controller.dispose, [controller]);
 
-	const state = useSyncExternalStore(
+	const state: State<TArg> = useSyncExternalStore(
 		controller.subscribe,
 		controller.getSnapshot,
 		controller.getSnapshot,

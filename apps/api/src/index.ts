@@ -5,7 +5,9 @@ const app = new Hono();
 
 // simulated latency and failure for the demo
 app.use(async (c, next) => {
-	await new Promise((resolve) => setTimeout(resolve, 500));
+	if (c.req.header("x-slow")) {
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+	}
 	if (c.req.header("x-fail"))
 		return c.json({ error: "simulated failure" }, 500);
 	await next();
@@ -23,6 +25,11 @@ const items = new Map(seed.map((item) => [item.id, item]));
 
 app.get("/items", (c) => {
 	return c.json([...items.values()].filter((e) => !e.deleted));
+});
+
+app.post("/reset", (c) => {
+	for (const item of items.values()) item.deleted = false;
+	return c.json([...items.values()]);
 });
 
 const setDeleted = (c: Context, deleted: boolean) => {

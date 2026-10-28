@@ -1,6 +1,15 @@
 import { useUndoableAction } from "action-lifecycle";
+import { ListX, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "./ui/empty";
 import {
   ItemActions,
   ItemContent,
@@ -13,12 +22,22 @@ import { toast } from "./ui/toast";
 
 export type Item = { id: string; name: string; deleted: boolean };
 
-const failHeader = (fail: boolean) => (fail ? { "x-fail": "1" } : undefined);
+type Props = { failDelete?: boolean; failUndo?: boolean; slow?: boolean };
 
-type Props = { failDelete?: boolean; failUndo?: boolean };
-
-function ItemList({ failDelete = false, failUndo = false }: Props) {
+function ItemList({
+  failDelete = false,
+  failUndo = false,
+  slow = false,
+}: Props) {
   const [getItems, setItems] = useState<Item[]>([]);
+
+  // read by the demo API to simulate failures and a slow network
+  const simHeaders = (fail: boolean) => {
+    const headers: Record<string, string> = {};
+    if (fail) headers["x-fail"] = "1";
+    if (slow) headers["x-slow"] = "1";
+    return headers;
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -34,7 +53,7 @@ function ItemList({ failDelete = false, failUndo = false }: Props) {
   const deleteItem = async (id: string) => {
     const res = await fetch(`/api/items/${id}`, {
       method: "DELETE",
-      headers: failHeader(failDelete),
+      headers: simHeaders(failDelete),
     });
     if (!res.ok) throw new Error("failed to delete");
     setDeleted(id, true);
@@ -43,10 +62,17 @@ function ItemList({ failDelete = false, failUndo = false }: Props) {
   const restoreItem = async (id: string) => {
     const res = await fetch(`/api/items/${id}/restore`, {
       method: "POST",
-      headers: failHeader(failUndo),
+      headers: simHeaders(failUndo),
     });
     if (!res.ok) throw new Error("failed to restore");
     setDeleted(id, false);
+  };
+
+  const reset = async () => {
+    const res = await fetch("/api/reset", { method: "POST" });
+    if (!res.ok) throw new Error("failed to reset");
+    const data = await res.json();
+    setItems(data);
   };
 
   const { state, execute, undo, dismiss } = useUndoableAction({
@@ -95,9 +121,25 @@ function ItemList({ failDelete = false, failUndo = false }: Props) {
     } else return;
   }, [state, undo, dismiss, getItems]);
 
-  return getItems
-    .filter((item) => !item.deleted)
-    .map((item) => {
+  const visible = getItems.filter((item) => !item.deleted);
+
+  return visible.length === 0 ? (
+    <Empty className="border border-muted-foreground/40 py-12">
+      <EmptyHeader>
+        <EmptyTitle>All items deleted</EmptyTitle>
+        <EmptyDescription>
+          Reset the list to bring them back and try again.
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button variant="outline" className="px-4" onClick={reset}>
+          <RotateCcw data-icon="inline-start" />
+          Reset list
+        </Button>
+      </EmptyContent>
+    </Empty>
+  ) : (
+    visible.map((item) => {
       const isDeleting = state.status === "executing" && state.arg === item.id;
 
       return (
@@ -121,7 +163,8 @@ function ItemList({ failDelete = false, failUndo = false }: Props) {
           </ItemActions>
         </ItemRow>
       );
-    });
+    })
+  );
 }
 
 export default ItemList;

@@ -2,6 +2,15 @@ import { serve } from "@hono/node-server";
 import { type Context, Hono } from "hono";
 
 const app = new Hono();
+
+// simulated latency and failure for the demo
+app.use(async (c, next) => {
+	await new Promise((resolve) => setTimeout(resolve, 500));
+	if (c.req.header("x-fail"))
+		return c.json({ error: "simulated failure" }, 500);
+	await next();
+});
+
 type Item = { id: string; name: string; deleted: boolean };
 
 const seed: Item[] = ["item 1", "item 2", "item 3"].map((name, i) => ({

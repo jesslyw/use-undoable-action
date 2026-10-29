@@ -149,7 +149,7 @@ describe("undo", () => {
 		expect(controller.getSnapshot()).toEqual({ status: "undone", arg: "a" });
 	});
 
-	it("stays undoFailed after the window; a retry after it expires", async () => {
+	it("expires after a failed undo once the window closes", async () => {
 		const { controller } = setup({
 			undo: () => Promise.reject(new Error("network")),
 		});

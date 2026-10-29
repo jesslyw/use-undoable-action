@@ -1,12 +1,12 @@
 # action-lifecycle
 
-![Demo: a deleted item with an Undo toast](docs/demo.png)
+<p align="center">
+  <img src="docs/demo.png" alt="Demo: a deleted item with an Undo toast" width="480">
+</p>
 
 I couldn't find a reusable module for an undo-able action with lifecycle management. This is a small one. It is a controller that runs an async action, keeps an undo window open, and reverts it if asked.
 
-Although it is presented with a React hook, the controller itself is framework-independent.
-
-There's no UI - render the state with whatever toast component you use. This demo uses shadcn/ui and tailwind.
+Although it is presented with a React hook, the controller itself is framework-independent. There's no UI - render the state with whatever toast component you use. This demo uses shadcn/ui and tailwind.
 
 ## Usage
 
